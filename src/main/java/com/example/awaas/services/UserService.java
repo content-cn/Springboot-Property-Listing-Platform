@@ -1,0 +1,70 @@
+package com.example.awaas.services;
+
+import com.example.awaas.dtos.UserDTO;
+import com.example.awaas.managers.UserManager;
+import com.example.awaas.requests.UserRequest;
+import com.example.awaas.utilities.EmailUtility;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.Random;
+
+@Service
+public class UserService {
+    @Autowired
+    private UserManager userManager;
+
+    @Autowired
+    private EmailUtility emailUtility;
+
+    public String signup(UserRequest userRequest) {
+        UserDTO userDTO = userManager.getByEmail(userRequest.getEmail());
+        if (userDTO != null) {
+            throw new IllegalArgumentException("Email is already registered.");
+        }
+
+        UserDTO user = new UserDTO();
+        user.setName(userRequest.getName());
+        user.setEmail(userRequest.getEmail());
+        user.setPassword(new BCryptPasswordEncoder().encode(userRequest.getPassword()));
+        user.setPhone(userRequest.getPhone());
+        user.setVerified(false);
+
+        // Generate OTP
+        String otp = String.valueOf(new Random().nextInt(9000) + 1000);
+        user.setOtp(otp);
+        user.setOtpGeneratedTime(LocalDateTime.now());
+
+        // Save user with OTP
+        userManager.save(user);
+
+        // Send OTP via email
+        emailUtility.sendEmail(user.getEmail(), "Email Verification", "Your OTP is: " + otp);
+
+        return "Signup successful! Please verify your email.";
+    }
+
+    public String verifyOtp(String email, String otp) {
+        UserDTO userDTO = userManager.getByEmail(email);
+        if (userDTO == null) {
+            throw new UsernameNotFoundException("User not found");
+        }
+
+        // Check OTP and expiration
+        if (userDTO.getOtp().equals(otp)) {
+            if (userDTO.getOtpGeneratedTime().isBefore(LocalDateTime.now().minusMinutes(10))) {
+                throw new IllegalArgumentException("OTP has expired.");
+            }
+            userDTO.setVerified(true);
+            userDTO.setOtp(null); // Clear OTP after successful verification
+            userDTO.setOtpGeneratedTime(null);
+            userManager.save(userDTO);
+            return "Email verified successfully!";
+        } else {
+            throw new IllegalArgumentException("Invalid OTP.");
+        }
+    }
+}

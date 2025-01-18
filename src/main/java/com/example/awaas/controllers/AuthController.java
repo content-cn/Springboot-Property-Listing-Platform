@@ -1,6 +1,8 @@
 package com.example.awaas.controllers;
 
+import com.example.awaas.requests.LoginRequest;
 import com.example.awaas.requests.UserRequest;
+import com.example.awaas.response.LoginResponse;
 import com.example.awaas.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,5 +24,11 @@ public class AuthController {
     public ResponseEntity<String> verifyOtp(@RequestParam String email, @RequestParam String otp) {
         String message = userService.verifyOtp(email, otp);
         return ResponseEntity.ok(message);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        LoginResponse response = userService.login(loginRequest);
+        return ResponseEntity.ok(response);
     }
 }

@@ -2,11 +2,15 @@ package com.example.awaas.services;
 
 import com.example.awaas.dtos.UserDTO;
 import com.example.awaas.managers.UserManager;
+import com.example.awaas.requests.LoginRequest;
 import com.example.awaas.requests.UserRequest;
+import com.example.awaas.response.LoginResponse;
 import com.example.awaas.utilities.EmailUtility;
+import com.example.awaas.utilities.JwtUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,6 +23,12 @@ public class UserService {
 
     @Autowired
     private EmailUtility emailUtility;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private JwtUtility jwtTokenUtil;
 
     public String signup(UserRequest userRequest) {
         UserDTO userDTO = userManager.getByEmail(userRequest.getEmail());
@@ -66,5 +76,17 @@ public class UserService {
         } else {
             throw new IllegalArgumentException("Invalid OTP.");
         }
+    }
+
+    public LoginResponse login(LoginRequest loginRequest) {
+        UserDTO userDTO = userManager.getByEmail(loginRequest.getEmail());
+        if (userDTO == null) {
+            return new LoginResponse(404, "User Not Found", null);
+        }
+        if (!passwordEncoder.matches(loginRequest.getPassword(), userDTO.getPassword())) {
+            return new LoginResponse(401, "Invalid Password", null);
+        }
+        String token = jwtTokenUtil.generateToken(userDTO.getEmail());
+        return new LoginResponse(200, "Login Successful", token);
     }
 }

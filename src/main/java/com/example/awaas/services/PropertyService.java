@@ -8,6 +8,7 @@ import com.example.awaas.mappers.PropertyMapper;
 import com.example.awaas.requests.CreatePropertyRequest;
 import com.example.awaas.response.PropertyResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -64,5 +65,35 @@ public class PropertyService {
         propertyDTO.setImageUrl(imagePath);
 
         return PropertyMapper.INSTANCE.toPropertyResponse(propertyManager.save(propertyDTO));
+    }
+
+
+    public PropertyResponse editProperty(Long propertyId, CreatePropertyRequest request, String ownerEmail) {
+        // Find the property by ID
+        PropertyDTO property = propertyManager.findById(propertyId);
+
+        if (property == null) {
+            throw new IllegalArgumentException("Property not found");
+        }
+
+        // Check if the user is the owner
+        if (!property.getOwner().getEmail().equals(ownerEmail)) {
+            throw new SecurityException("You are not authorized to edit this property");
+        }
+
+        // Update the property details
+        property.setTitle(request.getTitle());
+        property.setDescription(request.getDescription());
+        property.setPrice(request.getPrice());
+        property.setLocation(request.getLocation());
+        property.setType(request.getType());
+
+        // Save the updated property
+        return PropertyMapper.INSTANCE.toPropertyResponse(propertyManager.save(property));
+    }
+
+    // Get all properties with pagination
+    public Page<PropertyResponse> getAllProperties(int page, int size) {
+        return propertyManager.getAllProperties(page, size);
     }
 }

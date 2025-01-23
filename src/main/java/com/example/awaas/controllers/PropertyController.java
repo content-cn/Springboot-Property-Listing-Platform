@@ -1,6 +1,7 @@
 package com.example.awaas.controllers;
 
 import com.example.awaas.entities.Property;
+import com.example.awaas.enums.PropertyTypeEnum;
 import com.example.awaas.requests.CreatePropertyRequest;
 import com.example.awaas.response.PropertyResponse;
 import com.example.awaas.services.PropertyService;
@@ -55,11 +56,15 @@ public class PropertyController {
 
     @GetMapping
     public ResponseEntity<?> getAllProperties(
-            @RequestParam(defaultValue = "0") int page,  // Default page number
-            @RequestParam(defaultValue = "10") int size // Default page size
+            @RequestParam(required = false) String location,   // Optional location filter
+            @RequestParam(required = false) Double minPrice,   // Optional minimum price filter
+            @RequestParam(required = false) Double maxPrice,   // Optional maximum price filter
+            @RequestParam(required = false) PropertyTypeEnum type, // Optional property type filter
+            @RequestParam(defaultValue = "0") int page,        // Default page number
+            @RequestParam(defaultValue = "10") int size        // Default page size
     ) {
         try {
-            Page<PropertyResponse> properties = propertyService.getAllProperties(page, size);
+            Page<PropertyResponse> properties = propertyService.getAllProperties(location, minPrice, maxPrice, type, page, size);
             return ResponseEntity.ok(properties);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

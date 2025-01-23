@@ -2,6 +2,7 @@ package com.example.awaas.services;
 
 import com.example.awaas.dtos.PropertyDTO;
 import com.example.awaas.dtos.UserDTO;
+import com.example.awaas.enums.PropertyTypeEnum;
 import com.example.awaas.managers.PropertyManager;
 import com.example.awaas.managers.UserManager;
 import com.example.awaas.mappers.PropertyMapper;
@@ -93,7 +94,7 @@ public class PropertyService {
     }
 
     // Get all properties with pagination
-    public Page<PropertyResponse> getAllProperties(int page, int size) {
-        return propertyManager.getAllProperties(page, size);
+    public Page<PropertyResponse> getAllProperties(String location, Double minPrice, Double maxPrice, PropertyTypeEnum type, int page, int size) {
+        return propertyManager.getAllProperties(location, minPrice, maxPrice, type, page, size);
     }
 }

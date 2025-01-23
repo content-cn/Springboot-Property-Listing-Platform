@@ -3,6 +3,7 @@ package com.example.awaas.managers;
 import com.example.awaas.dtos.PropertyDTO;
 import com.example.awaas.dtos.UserDTO;
 import com.example.awaas.entities.Property;
+import com.example.awaas.enums.PropertyTypeEnum;
 import com.example.awaas.mappers.PropertyMapper;
 import com.example.awaas.repos.PropertyRepo;
 import com.example.awaas.response.PropertyResponse;
@@ -36,9 +37,9 @@ public class PropertyManager {
         return null;
     }
 
-    public Page<PropertyResponse> getAllProperties(int page, int size) {
+    public Page<PropertyResponse> getAllProperties(String location, Double minPrice, Double maxPrice, PropertyTypeEnum type, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Property> propertyPage = propertyRepository.findAll(pageable);
+        Page<Property> propertyPage = propertyRepository.findAllWithFilters(location, minPrice, maxPrice, type, pageable);
 
         // Map the Page<Property> to Page<PropertyResponse>
         return PropertyMapper.INSTANCE.toPagePropertyResponse(propertyPage);

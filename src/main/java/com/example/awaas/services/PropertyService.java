@@ -8,6 +8,7 @@ import com.example.awaas.managers.UserManager;
 import com.example.awaas.mappers.PropertyMapper;
 import com.example.awaas.requests.CreatePropertyRequest;
 import com.example.awaas.response.PropertyResponse;
+import com.example.awaas.utilities.EmailUtility;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,9 @@ public class PropertyService {
 
     @Autowired
     private UserManager userManager;
+
+    @Autowired
+    private EmailUtility emailUtility;
 
     // Path to save uploaded images locally (adjust as needed)
     private final String UPLOAD_DIR = "/Users/omrajsharma/Documents/coding-ninjas/cn-awaas-vishwa-spring-be/uploads/";
@@ -96,5 +100,46 @@ public class PropertyService {
     // Get all properties with pagination
     public Page<PropertyResponse> getAllProperties(String location, Double minPrice, Double maxPrice, PropertyTypeEnum type, int page, int size) {
         return propertyManager.getAllProperties(location, minPrice, maxPrice, type, page, size);
+    }
+
+    public PropertyResponse getProperty(Long propertyId) {
+        PropertyDTO property = propertyManager.findById(propertyId);
+        if (property == null) {
+            throw new IllegalArgumentException("Property not found");
+        }
+        return PropertyMapper.INSTANCE.toPropertyResponse(property);
+    }
+
+    public void sendInterestEmail(Long propertyId, String userEmail) {
+        PropertyDTO property = propertyManager.findById(propertyId);
+
+        if (property == null) {
+            throw new IllegalArgumentException("Property not found");
+        }
+
+        UserDTO userDTO = userManager.getByEmail(userEmail);
+
+        if (userDTO == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        UserDTO ownerDTO = userManager.getByEmail(property.getOwner().getEmail());
+
+        if (ownerDTO == null) {
+            throw new IllegalArgumentException("Owner not found");
+        }
+
+        if (ownerDTO.getEmail().equals(userDTO.getEmail())) {
+            throw new SecurityException("Cannot send interest email");
+        }
+
+        emailUtility.sendEmail(ownerDTO.getEmail(),
+                "Interest in Your Property: " + property.getTitle(),
+                "Dear " + ownerDTO.getName() + ",\n\n" +
+                        "You have received interest for your property \"" + property.getTitle() + "\".\n\n" +
+                        "Details:\n" +
+                        "Name: " + userDTO.getName() + "\n" +
+                        "Email: " + userDTO.getEmail() + "\n" +
+                        "Best regards,\nYour Property Listing Platform");
     }
 }

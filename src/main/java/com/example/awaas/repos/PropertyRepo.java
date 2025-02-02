@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
+
 public interface PropertyRepo extends JpaRepository<Property, Long> {
     @Query("SELECT p FROM Property p WHERE " +
             "(:location IS NULL OR p.location LIKE %:location%) AND " +
@@ -20,4 +22,6 @@ public interface PropertyRepo extends JpaRepository<Property, Long> {
             @Param("maxPrice") Double maxPrice,
             @Param("type") PropertyTypeEnum type,
             Pageable pageable);
+
+    List<Property> findByOwnerId(Long ownerId);
 }

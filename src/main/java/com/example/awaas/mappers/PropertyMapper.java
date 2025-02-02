@@ -8,6 +8,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
+
 @Mapper
 public interface PropertyMapper {
     PropertyMapper INSTANCE = Mappers.getMapper(PropertyMapper.class);
@@ -23,4 +25,7 @@ public interface PropertyMapper {
 
     // Add method to map Property entity directly to PropertyResponse
     PropertyResponse toPropertyResponseFromEntity(Property property);
+
+    List<PropertyDTO> toPropertyDTOList(List<Property> propertyList);
+    List<PropertyResponse> toPropertyResponseList(List<PropertyDTO> properties);
 }

@@ -1,10 +1,16 @@
 package com.example.awaas.services;
 
+import com.example.awaas.dtos.PropertyDTO;
 import com.example.awaas.dtos.UserDTO;
+import com.example.awaas.managers.PropertyManager;
 import com.example.awaas.managers.UserManager;
+import com.example.awaas.mappers.PropertyMapper;
+import com.example.awaas.mappers.UserMapper;
 import com.example.awaas.requests.LoginRequest;
 import com.example.awaas.requests.UserRequest;
 import com.example.awaas.response.LoginResponse;
+import com.example.awaas.response.PropertyResponse;
+import com.example.awaas.response.UserResponse;
 import com.example.awaas.utilities.EmailUtility;
 import com.example.awaas.utilities.JwtUtility;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,12 +20,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Random;
 
 @Service
 public class UserService {
     @Autowired
     private UserManager userManager;
+
+    @Autowired
+    private PropertyManager propertyManager;
 
     @Autowired
     private EmailUtility emailUtility;
@@ -89,4 +99,36 @@ public class UserService {
         String token = jwtTokenUtil.generateToken(userDTO.getEmail());
         return new LoginResponse(200, "Login Successful", token);
     }
+
+    public UserResponse getUserProfile(String email) {
+        UserDTO user = userManager.getByEmail(email);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+        return UserMapper.INSTANCE.toUserResponse(user);
+    }
+
+    public void updateUserProfile(String email, UserRequest updateRequest) {
+        UserDTO user = userManager.getByEmail(email);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+
+        // Apply updates
+        user.setName(updateRequest.getName());
+        user.setPhone(updateRequest.getPhone());
+
+        // Save updated user
+        userManager.save(user);
+    }
+
+    public List<PropertyResponse> getUserProperties(String email) {
+        UserDTO user = userManager.getByEmail(email);
+        if (user == null) {
+            throw new IllegalArgumentException("User not found");
+        }
+        List<PropertyDTO> properties = propertyManager.getPropertiesByOwner(user.getId());
+        return PropertyMapper.INSTANCE.toPropertyResponseList(properties);
+    }
+
 }

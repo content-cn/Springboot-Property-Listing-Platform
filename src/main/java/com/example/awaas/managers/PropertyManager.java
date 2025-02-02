@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -43,6 +44,10 @@ public class PropertyManager {
 
         // Map the Page<Property> to Page<PropertyResponse>
         return PropertyMapper.INSTANCE.toPagePropertyResponse(propertyPage);
+    }
+
+    public List<PropertyDTO> getPropertiesByOwner(Long ownerId) {
+        return PropertyMapper.INSTANCE.toPropertyDTOList(propertyRepository.findByOwnerId(ownerId));
     }
 
 }
